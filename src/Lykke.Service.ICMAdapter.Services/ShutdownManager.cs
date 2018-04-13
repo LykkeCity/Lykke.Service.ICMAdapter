@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Common;
+﻿using Common;
 using Common.Log;
 using Lykke.Service.ICMAdapter.Core.Services;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Lykke.Service.ICMAdapter.Services
 {

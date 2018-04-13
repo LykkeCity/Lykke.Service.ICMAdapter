@@ -1,9 +1,16 @@
 ﻿using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using Common;
 using Common.Log;
+using Lykke.Service.ICMAdapter.Core.Domain.OrderBooks;
+using Lykke.Service.ICMAdapter.Core.Domain.Trading;
+using Lykke.Service.ICMAdapter.Core.Handlers;
 using Lykke.Service.ICMAdapter.Core.Services;
-using Lykke.Service.ICMAdapter.Settings.ServiceSettings;
+using Lykke.Service.ICMAdapter.Core.Settings;
+using Lykke.Service.ICMAdapter.Core.Settings.ServiceSettings;
+using Lykke.Service.ICMAdapter.Core.Throttling;
 using Lykke.Service.ICMAdapter.Services;
+using Lykke.Service.ICMAdapter.Services.Exchange;
 using Lykke.SettingsReader;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -46,9 +53,45 @@ namespace Lykke.Service.ICMAdapter.Modules
             builder.RegisterType<ShutdownManager>()
                 .As<IShutdownManager>();
 
-            // TODO: Add your dependencies here
+            builder.RegisterGeneric(typeof(RabbitMqHandler<>));
+
+            builder.RegisterInstance(_settings.CurrentValue);
+
+            //builder.RegisterType<ICMExchange>().As<ExchangeBase>().SingleInstance();
+
+            RegisterRabbitMqHandler<TickPrice>(builder, _settings.CurrentValue.RabbitMq.TickPrices, "tickHandler");
+            RegisterRabbitMqHandler<TradingOrderBook>(builder, _settings.CurrentValue.RabbitMq.OrderBooks, "orderBookHandler");
+
+            builder.RegisterType<TickPriceHandlerDecorator>()
+                .WithParameter((info, context) => info.Name == "rabbitMqHandler",
+                    (info, context) => context.ResolveNamed<IHandler<TickPrice>>("tickHandler"))
+                .SingleInstance()
+                .As<IHandler<TickPrice>>();
+
+            builder.RegisterType<EventsPerSecondPerInstrumentThrottlingManager>()
+                .WithParameter("maxEventPerSecondByInstrument", _settings.CurrentValue.MaxEventPerSecondByInstrument)
+                .As<IThrottling>().InstancePerDependency();
+
+            builder.RegisterType<ICMTickPriceHarvester>()
+                .As<IStartable>()
+                .As<IStopable>()
+                .AsSelf()
+                .SingleInstance();
+
+            builder.RegisterType<ICMModelConverter>()
+                .SingleInstance();
 
             builder.Populate(_services);
+        }
+
+        private static void RegisterRabbitMqHandler<T>(ContainerBuilder container, RabbitMqPublishToExchangeConfiguration exchangeConfiguration, string regKey = "")
+        {
+            container.RegisterType<RabbitMqHandler<T>>()
+                .WithParameter("connectionString", exchangeConfiguration.ConnectionString)
+                .WithParameter("exchangeName", exchangeConfiguration.PublishToExchange)
+                .WithParameter("enabled", exchangeConfiguration.Enabled)
+                .Named<IHandler<T>>(regKey)
+                .As<IHandler<T>>();
         }
     }
 }
