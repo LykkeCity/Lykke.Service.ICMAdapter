@@ -6,6 +6,7 @@ using Lykke.RabbitMqBroker.Subscriber;
 using Lykke.Service.ICMAdapter.Core;
 using Lykke.Service.ICMAdapter.Core.Domain.OrderBooks;
 using Lykke.Service.ICMAdapter.Core.Domain.Trading;
+using Lykke.Service.ICMAdapter.Core.Filters;
 using Lykke.Service.ICMAdapter.Core.Handlers;
 using Lykke.Service.ICMAdapter.Core.Settings;
 using Lykke.Service.ICMAdapter.Core.Throttling;
@@ -27,6 +28,7 @@ namespace Lykke.Service.ICMAdapter.Services.Exchange
         private readonly ILog _log;
         private readonly RabbitMqSubscriber<ICMOrderBook> _rabbit;
         private readonly HashSet<string> _instruments;
+        private readonly RepeatingTicksFilter _repaetingTicksFilter;
 
         public ICMTickPriceHarvester(
             ICMAdapterSettings config,
@@ -35,6 +37,7 @@ namespace Lykke.Service.ICMAdapter.Services.Exchange
             IHandler<TradingOrderBook> orderBookHandler,
             IThrottling orderBooksThrottler,
             IThrottling tickPriceThrottler,
+            RepeatingTicksFilter repaetingTicksFilter,
             ILog log)
         {
             _config = config;
@@ -44,6 +47,7 @@ namespace Lykke.Service.ICMAdapter.Services.Exchange
 
             _orderBooksThrottler = orderBooksThrottler;
             _tickPricesThrottler = tickPriceThrottler;
+            _repaetingTicksFilter = repaetingTicksFilter;
 
             _log = log;
 
@@ -71,7 +75,7 @@ namespace Lykke.Service.ICMAdapter.Services.Exchange
                 if (!_tickPricesThrottler.NeedThrottle(orderBook.Asset))
                 {
                     var tickPrice = _modelConverter.ToTickPrice(orderBook);
-                    if (tickPrice != null)
+                    if (tickPrice != null && !_repaetingTicksFilter.IsTheSameAsLatestTickPrice(tickPrice))
                     {
                         await _tickPriceHandler.Handle(tickPrice);
                     }

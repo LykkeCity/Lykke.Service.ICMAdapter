@@ -4,6 +4,7 @@ using Common;
 using Common.Log;
 using Lykke.Service.ICMAdapter.Core.Domain.OrderBooks;
 using Lykke.Service.ICMAdapter.Core.Domain.Trading;
+using Lykke.Service.ICMAdapter.Core.Filters;
 using Lykke.Service.ICMAdapter.Core.Handlers;
 using Lykke.Service.ICMAdapter.Core.Services;
 using Lykke.Service.ICMAdapter.Core.Settings;
@@ -80,6 +81,8 @@ namespace Lykke.Service.ICMAdapter.Modules
 
             builder.RegisterType<ICMModelConverter>()
                 .SingleInstance();
+
+            builder.RegisterType<RepeatingTicksFilter>().SingleInstance();
 
             builder.Populate(_services);
         }
