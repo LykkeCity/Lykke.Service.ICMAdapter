@@ -37,7 +37,7 @@ namespace Lykke.Service.ICMAdapter.Services.Exchange
             IHandler<TradingOrderBook> orderBookHandler,
             IThrottling orderBooksThrottler,
             IThrottling tickPriceThrottler,
-            RepeatingTicksFilter repaetingTicksFilter,
+            RepeatingTicksFilter repeatingTicksFilter,
             ILog log)
         {
             _config = config;
@@ -47,7 +47,7 @@ namespace Lykke.Service.ICMAdapter.Services.Exchange
 
             _orderBooksThrottler = orderBooksThrottler;
             _tickPricesThrottler = tickPriceThrottler;
-            _repaetingTicksFilter = repaetingTicksFilter;
+            _repaetingTicksFilter = repeatingTicksFilter;
 
             _log = log;
 
