@@ -1,6 +1,6 @@
-﻿using System.Threading.Tasks;
-using Common.Log;
+﻿using Common.Log;
 using Lykke.Service.ICMAdapter.Core.Services;
+using System.Threading.Tasks;
 
 namespace Lykke.Service.ICMAdapter.Services
 {
@@ -22,8 +22,6 @@ namespace Lykke.Service.ICMAdapter.Services
 
         public async Task StartAsync()
         {
-            // TODO: Implement your startup logic here. Good idea is to log every step
-
             await Task.CompletedTask;
         }
     }
